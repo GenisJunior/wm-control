@@ -473,15 +473,14 @@ body:not(.home-mode) .view.active:before{
 const STEPS=[
   'Arquivos da Execução','1. Validar Balanceamento','2. Validar Saldo','3. Gerar Balanceamento','4. Validar Pós-Carga','5. Carga de Saldo','6. Recuperação Geral','7. Validar Tabela 20'
 ];
-let db=JSON.parse(localStorage.getItem('wmv2_preview_exact')||'null') || {projects:[
-{id:'demo1',name:'Implantação LIMAP ES',center:'ES01',warehouse:'302',created:Date.now()-3600000*24,executions:[{id:'e1',name:'Execução 002',created:Date.now()-3600000*24,files:[],done:[1,2,3,4,5,6,7]}]},
-{id:'demo2',name:'Projeto Cajamar HB',center:'CJ01',warehouse:'302',created:Date.now()-3600000*48,executions:[{id:'e2',name:'Execução 001',created:Date.now()-3600000*48,files:[],done:[1,2,3,4,5,6,7]}]},
-{id:'demo3',name:'Projeto MT - PP',center:'MT01',warehouse:'110',created:Date.now()-3600000*72,executions:[{id:'e3',name:'Execução 003',created:Date.now()-3600000*72,files:[],done:[1,2,3]}]},
-{id:'demo4',name:'Projeto RJ07 - S09',center:'RJ07',warehouse:'302',created:Date.now()-3600000*96,executions:[{id:'e4',name:'Execução 001',created:Date.now()-3600000*96,files:[],done:[1,2,3,4,5,6,7]}]},
-{id:'demo5',name:'Projeto Testes WM',center:'TS01',warehouse:'302',created:Date.now()-3600000*120,executions:[{id:'e5',name:'Execução 004',created:Date.now()-3600000*120,files:[],done:[1,2]}]}
-]};
+const EXECUTIONS_STORAGE_KEY='wmv2_preview_executions';
+let db={projects:[]};
 let currentProjectId=null,currentExecutionId=null,currentSection=0;
-function save(){localStorage.setItem('wmv2_preview_exact',JSON.stringify(db));renderHome();renderProjects();}
+function loadLocalExecutions(){try{const value=JSON.parse(localStorage.getItem(EXECUTIONS_STORAGE_KEY)||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch{return {}}}
+function save(){const executions={};db.projects.forEach(p=>{executions[p.id]=p.executions||[]});localStorage.setItem(EXECUTIONS_STORAGE_KEY,JSON.stringify(executions));renderHome();renderProjects();}
+function normalizeProject(p,localExecutions){const parsedDate=typeof p.created_at==='number'?p.created_at:Date.parse(p.created_at);return {id:String(p.id),name:p.name,center:p.werks,warehouse:p.lgnum,created:Number.isFinite(parsedDate)?parsedDate:Date.now(),executions:localExecutions[String(p.id)]||[]}}
+async function apiRequest(path,options={}){let response;try{response=await fetch(path,{...options,headers:{'content-type':'application/json',...(options.headers||{})}})}catch{throw new Error('Não foi possível conectar à API.')}let data={};try{data=await response.json()}catch{}if(!response.ok)throw new Error(data.error||'Não foi possível concluir a solicitação.');return data}
+async function loadProjects(){try{const data=await apiRequest('/api/projects');const localExecutions=loadLocalExecutions();db.projects=(data.projects||[]).map(p=>normalizeProject(p,localExecutions));renderHome();renderProjects()}catch(error){db.projects=[];renderHome();renderProjects();toast(error.message)}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function fmtDate(ts){return new Date(ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
@@ -491,7 +490,7 @@ function renderHome(){const rows=db.projects.slice().sort((a,b)=>b.created-a.cre
 function renderProjects(){document.getElementById('allProjects').innerHTML=db.projects.length?db.projects.slice().sort((a,b)=>b.created-a.created).map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.center)}</td><td>${esc(p.warehouse)}</td><td>${fmtDate(p.created)}</td><td>${p.executions?.length||0}</td><td><button class="btn btn-soft" onclick="openProject('${p.id}')">Abrir</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Nenhum projeto cadastrado.</td></tr>'}
 function projectRow(p){const e=(p.executions||[]).slice().sort((a,b)=>b.created-a.created)[0];const done=e?.done?.length||0;let st='Concluída',cl='green';if(done>0&&done<7){st='Em andamento';cl='orange'}if(!e){st='Com pendências';cl='red'}if(p.id==='demo5'){st='Com pendências';cl='red'}const subtitles={demo1:'Projeto ES',demo2:'Centro de Distribuição Cajamar',demo3:'Implantação MT',demo4:'CD RJ07 - Venda HB',demo5:'Ambiente de testes'};const folderColors={demo1:'#1765f1',demo2:'#7c3aed',demo3:'#f97316',demo4:'#14b8a6',demo5:'#f43f5e'};const fc=folderColors[p.id]||'#1765f1';return `<tr><td><div class="project-cell"><span class="folder-ico" style="color:${fc}">▱</span><div><b>${esc(p.name)}</b><small>${esc(subtitles[p.id]||'Projeto WM')}</small></div></div></td><td>${esc(p.center)}</td><td>${esc(p.warehouse)}</td><td class="last-exec">${e?fmtDate(e.created):'-'}${e?`<small>${esc(e.name)}</small>`:''}</td><td><span class="home-status ${cl}">${st}</span></td><td><button class="open-btn" onclick="openProject('${p.id}')">▱ Abrir</button><button class="more-btn">⋮</button></td></tr>`}
 function esc(s){return String(s??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]))}
-document.getElementById('createProjectBtn').addEventListener('click',()=>{const name=projectName.value.trim(),center=projectCenter.value.trim(),warehouse=projectWarehouse.value.trim();if(!name||!center||!warehouse){toast('Preencha Nome, Centro e LGNUM.');return}const p={id:uid(),name,center,warehouse,created:Date.now(),executions:[]};db.projects.push(p);save();projectName.value=projectCenter.value=projectWarehouse.value='';openProject(p.id);toast('Projeto criado.');});
+document.getElementById('createProjectBtn').addEventListener('click',async()=>{const name=projectName.value.trim(),center=projectCenter.value.trim(),warehouse=projectWarehouse.value.trim();if(!name||!center||!warehouse){toast('Preencha Nome, Centro e LGNUM.');return}const button=document.getElementById('createProjectBtn');button.disabled=true;try{const data=await apiRequest('/api/projects',{method:'POST',body:JSON.stringify({name,werks:center,lgnum:warehouse})});const p=normalizeProject(data.project,loadLocalExecutions());db.projects.push(p);renderHome();renderProjects();projectName.value=projectCenter.value=projectWarehouse.value='';openProject(p.id);toast('Projeto criado.')}catch(error){toast(error.message)}finally{button.disabled=false}});
 function getProject(){return db.projects.find(p=>p.id===currentProjectId)}
 function getExecution(){return getProject()?.executions?.find(e=>e.id===currentExecutionId)}
 function openProject(id){currentProjectId=id;const p=getProject();if(!p)return;document.getElementById('projectTitle').textContent=p.name;document.getElementById('projectMetaCenter').textContent=p.center;document.getElementById('projectMetaWarehouse').textContent=p.warehouse;renderProject();showView('project')}
@@ -514,7 +513,7 @@ function guessType(n){const s=n.toLowerCase();if(s.includes('range'))return 'Ran
 function removeFile(id){const e=getExecution();e.files=e.files.filter(f=>f.id!==id);save();renderExecBody();renderProject()}
 function toggleStep(step){const e=getExecution();e.done=e.done||[];e.done=e.done.includes(step)?e.done.filter(x=>x!==step):[...e.done,step].sort();save();renderExecution();renderProject();}
 function goHomeAndFocus(){showView('home');setTimeout(()=>projectName.focus(),50)}
-document.body.classList.add('home-mode');renderHome();renderProjects();
+document.body.classList.add('home-mode');renderHome();renderProjects();loadProjects();
 </script>
 
 <script id="wm-v5-header-sync">
