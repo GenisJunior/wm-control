@@ -1,1 +1,22 @@
-
+{
+  "name": "wm-control",
+  "compatibility_date": "2026-08-31",
+  "main": "worker.js",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wm-control-db",
+      "database_id": "3d1ef132-c171-4a3b-9eee-783fec7373b8"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "wm-arquivos-de-controle"
+    }
+  ]
+}
