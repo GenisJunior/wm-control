@@ -14,6 +14,16 @@ function projectFromRow(row) {
   };
 }
 
+function executionFromRow(row) {
+  return {
+    id: Number(row.id),
+    project_id: Number(row.project_id),
+    name: row.name,
+    status: row.status,
+    created_at: row.created_at
+  };
+}
+
 function validateProjectInput(body) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return { error: "Corpo da requisição inválido." };
@@ -34,6 +44,17 @@ function validateProjectInput(body) {
   }
 
   return { project };
+}
+
+function validateExecutionInput(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { error: "Corpo da requisição inválido." };
+  }
+
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  if (!name) return { error: "O campo name é obrigatório." };
+  if (name.length > 200) return { error: "O nome da execução excede o tamanho permitido." };
+  return { execution: { name } };
 }
 
 async function handleApi(request, env, url) {
@@ -68,6 +89,52 @@ async function handleApi(request, env, url) {
     const id = result.meta.last_row_id;
 
     return json({ project: { id, name, werks, lgnum, created_at: createdAt } }, 201);
+  }
+
+  const projectExecutionsMatch = url.pathname.match(/^\/api\/projects\/(\d+)\/executions$/);
+  if (projectExecutionsMatch) {
+    const projectId = Number(projectExecutionsMatch[1]);
+    const project = await env.DB.prepare(
+      "SELECT id FROM projects WHERE id = ? LIMIT 1"
+    ).bind(projectId).first();
+    if (!project) return json({ error: "Projeto não encontrado." }, 404);
+
+    if (request.method === "GET") {
+      const result = await env.DB.prepare(
+        "SELECT id, project_id, name, status, created_at FROM executions WHERE project_id = ? ORDER BY created_at DESC, id DESC"
+      ).bind(projectId).all();
+      return json({ executions: result.results.map(executionFromRow) });
+    }
+
+    if (request.method === "POST") {
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ error: "JSON inválido." }, 400);
+      }
+
+      const validation = validateExecutionInput(body);
+      if (validation.error) return json({ error: validation.error }, 400);
+
+      const result = await env.DB.prepare(
+        "INSERT INTO executions (project_id, name) VALUES (?, ?)"
+      ).bind(projectId, validation.execution.name).run();
+      const row = await env.DB.prepare(
+        "SELECT id, project_id, name, status, created_at FROM executions WHERE id = ? LIMIT 1"
+      ).bind(result.meta.last_row_id).first();
+
+      return json({ execution: executionFromRow(row) }, 201);
+    }
+  }
+
+  const executionMatch = url.pathname.match(/^\/api\/executions\/(\d+)$/);
+  if (request.method === "GET" && executionMatch) {
+    const row = await env.DB.prepare(
+      "SELECT id, project_id, name, status, created_at FROM executions WHERE id = ? LIMIT 1"
+    ).bind(Number(executionMatch[1])).first();
+    if (!row) return json({ error: "Execução não encontrada." }, 404);
+    return json({ execution: executionFromRow(row) });
   }
 
   const projectMatch = url.pathname.match(/^\/api\/projects\/([^/]+)$/);
