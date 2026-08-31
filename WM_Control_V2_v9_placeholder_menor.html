@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WM Control V2 — Prévia</title>
+<style>
+:root{
+  --navy:#0b1f3a; --navy-2:#102c52; --blue:#2563eb; --blue-2:#dbeafe;
+  --bg:#f5f8fc; --card:#fff; --text:#172033; --muted:#667085; --line:#e5eaf1;
+  --green:#12b76a; --green-bg:#ecfdf3; --amber:#f59e0b; --amber-bg:#fffaeb;
+  --red:#ef4444; --red-bg:#fef2f2; --shadow:0 12px 28px rgba(15,23,42,.08);
+}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit} button{cursor:pointer}
+.app{min-height:100vh;display:grid;grid-template-columns:240px 1fr}
+.sidebar{background:linear-gradient(180deg,var(--navy),#07162a);color:white;padding:22px 16px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:11px;padding:0 8px 22px;border-bottom:1px solid rgba(255,255,255,.1)}
+.brandmark{width:38px;height:38px;border-radius:12px;background:#fff;color:var(--blue);display:grid;place-items:center;font-weight:900;box-shadow:0 8px 18px rgba(0,0,0,.2)}
+.brand strong{display:block;font-size:18px}.brand small{color:#a9b6c7}
+.nav{margin-top:18px;display:grid;gap:7px}.nav button{border:0;background:transparent;color:#c7d2e0;text-align:left;padding:11px 12px;border-radius:10px;display:flex;align-items:center;gap:10px}
+.nav button:hover,.nav button.active{background:rgba(37,99,235,.22);color:#fff}.nav .icon{width:20px;text-align:center}
+.sidebox{position:absolute;left:16px;right:16px;bottom:18px;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12px;color:#cbd5e1}.sidebox b{color:#fff}
+.main{min-width:0}.topbar{height:70px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:20}
+.topbar .crumb{font-size:13px;color:var(--muted)}.topbar .crumb b{color:var(--text)}
+.top-actions{display:flex;gap:10px;align-items:center}.pill{padding:7px 10px;border-radius:999px;background:#eef4ff;color:#2453b3;font-size:12px;font-weight:700}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--navy);color:white;display:grid;place-items:center;font-weight:800}
+.content{padding:28px;max-width:1480px;margin:0 auto}.view{display:none}.view.active{display:block}
+.hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:24px}.hero h1{margin:0 0 7px;font-size:27px;letter-spacing:-.5px}.hero p{margin:0;color:var(--muted);max-width:760px;line-height:1.55}
+.grid2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.7fr);gap:20px}.card{background:var(--card);border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow)}.card-head{padding:20px 22px 0}.card-head h2{margin:0;font-size:18px}.card-head p{margin:6px 0 0;color:var(--muted);font-size:13px}.card-body{padding:20px 22px 22px}
+.form-grid{display:grid;grid-template-columns:1.5fr .75fr .85fr;gap:14px}.field label{display:block;font-size:12px;font-weight:800;color:#344054;margin-bottom:7px}.field input,.field select{width:100%;height:43px;border:1px solid #d0d5dd;border-radius:10px;padding:0 12px;background:#fff;outline:none}.field input:focus,.field select:focus{border-color:#84adff;box-shadow:0 0 0 3px rgba(37,99,235,.09)}
+.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:800}.btn-primary{background:var(--blue);color:white}.btn-primary:hover{background:#1d4ed8}.btn-soft{background:#eef4ff;color:#214fb6}.btn-ghost{background:#fff;border:1px solid var(--line);color:#344054}.btn-danger{background:var(--red-bg);color:#b42318}.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.steps-mini{display:grid;gap:13px}.step-mini{display:flex;gap:12px;align-items:flex-start}.stepnum{width:30px;height:30px;border-radius:9px;background:#eef4ff;color:var(--blue);font-weight:900;display:grid;place-items:center;flex:0 0 auto}.step-mini b{font-size:13px}.step-mini p{margin:3px 0 0;color:var(--muted);font-size:12px;line-height:1.4}
+.tip{margin-top:16px;border-radius:14px;padding:15px;background:linear-gradient(135deg,#eef4ff,#f8fbff);border:1px solid #d9e6ff}.tip b{display:block;color:#1e4fab;margin-bottom:5px}.tip p{margin:0;color:#567;line-height:1.45;font-size:12px}
+.section-title{display:flex;align-items:center;justify-content:space-between;margin:26px 0 12px}.section-title h2{font-size:18px;margin:0}.section-title span{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff}.table th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#667085;background:#f9fafb;text-align:left;padding:12px;border-bottom:1px solid var(--line)}.table td{padding:13px 12px;border-bottom:1px solid #eef1f5;font-size:13px}.table tr:last-child td{border-bottom:0}.status{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;border-radius:999px;padding:6px 9px}.status.green{background:var(--green-bg);color:#067647}.status.amber{background:var(--amber-bg);color:#b54708}.status.blue{background:#eff4ff;color:#3448b5}.status.gray{background:#f2f4f7;color:#475467}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.project-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.project-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.meta-chip{font-size:12px;border:1px solid var(--line);background:#fff;padding:7px 9px;border-radius:9px;color:#475467}.meta-chip b{color:#1d2939}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}.kpi{background:white;border:1px solid var(--line);border-radius:14px;padding:15px;display:flex;gap:12px;align-items:center}.kpi-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:#eef4ff}.kpi strong{display:block;font-size:21px}.kpi span{font-size:11px;color:var(--muted)}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:18px}.tab{border:0;background:transparent;padding:11px 13px;color:#667085;font-weight:700;border-bottom:2px solid transparent}.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.panel{display:none}.panel.active{display:block}.panel-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:18px}
+.execution-card{padding:16px;border:1px solid var(--line);border-radius:14px;background:#fff;display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}.execution-card h3{margin:0;font-size:14px}.execution-card p{margin:5px 0 0;color:var(--muted);font-size:12px}
+.progress-rail{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin:18px 0}.rail-item{position:relative;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 8px;min-width:0}.rail-item .n{width:25px;height:25px;border-radius:8px;background:#eef4ff;color:var(--blue);font-weight:900;display:grid;place-items:center;font-size:12px}.rail-item b{display:block;font-size:10px;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rail-item.done{border-color:#abefc6;background:#f6fef9}.rail-item.done .n{background:#dcfae6;color:#067647}.rail-item.current{border-color:#84adff;box-shadow:0 0 0 3px rgba(37,99,235,.06)}
+.exec-layout{display:grid;grid-template-columns:300px 1fr;gap:18px}.exec-menu{background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px;height:max-content}.exec-menu button{width:100%;border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:9px;color:#475467;font-weight:700}.exec-menu button.active,.exec-menu button:hover{background:#eef4ff;color:#214fb6}.exec-body{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;min-height:430px}.exec-body h2{margin:0 0 6px}.exec-body>p{color:var(--muted);font-size:13px;margin-top:0}
+.upload-zone{border:1.5px dashed #b9c8df;border-radius:14px;padding:25px;text-align:center;background:#fbfdff}.upload-zone input{margin-top:12px}.file-list{margin-top:16px}.file-row{display:grid;grid-template-columns:1.5fr .8fr .8fr .55fr auto;gap:10px;align-items:center;padding:11px;border-bottom:1px solid #eef1f5;font-size:12px}.file-row.header{font-weight:800;color:#667085;background:#f9fafb;border-radius:10px}
+.validation-placeholder{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fbfcfe}.validation-placeholder h3{margin:0 0 8px;font-size:15px}.autofill{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}.autofill span{background:#f2f4f7;border-radius:8px;padding:7px 9px;font-size:12px;color:#475467}.autofill b{color:#1d2939}.notice{border-left:3px solid var(--blue);background:#eff6ff;padding:12px 13px;border-radius:8px;color:#344054;font-size:12px;line-height:1.45}
+.modal-backdrop{position:fixed;inset:0;background:rgba(4,12,25,.48);display:none;place-items:center;z-index:100}.modal-backdrop.open{display:grid}.modal{width:min(560px,92vw);background:white;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.28);padding:22px}.modal h2{margin:0 0 6px}.modal p{color:var(--muted);font-size:13px}.modal .form-grid{grid-template-columns:1fr 1fr}
+.toast{position:fixed;right:22px;bottom:22px;background:#101828;color:#fff;padding:12px 14px;border-radius:10px;box-shadow:var(--shadow);display:none;z-index:200;font-size:13px}.toast.show{display:block}
+@media(max-width:1050px){.app{grid-template-columns:76px 1fr}.sidebar{padding:18px 10px}.brand span,.nav .label,.sidebox{display:none}.brand{justify-content:center;padding-left:0;padding-right:0}.nav button{justify-content:center}.grid2,.exec-layout{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.progress-rail{grid-template-columns:repeat(4,1fr)}}
+
+/* ===== HOME EXACT MOCKUP ===== */
+body.home-mode{background:#f8fbff}
+body.home-mode .app{display:block;min-height:100vh}
+body.home-mode .sidebar,body.home-mode .topbar{display:none}
+body.home-mode .main{width:100%}
+body.home-mode .content{padding:0;max-width:none;margin:0}
+.home-shell{min-height:100vh;background:linear-gradient(180deg,#fbfdff 0%,#f7fbff 100%)}
+.home-header{height:58px;background:linear-gradient(90deg,#061a36 0%,#071f42 68%,#06182f 100%);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 34px;border-bottom:1px solid rgba(255,255,255,.08)}
+.home-brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.01em}
+.home-logo{width:34px;height:38px;position:relative;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:900;background:linear-gradient(180deg,#2f6eff,#1557e8);clip-path:polygon(50% 0,94% 18%,87% 78%,50% 100%,13% 78%,6% 18%);filter:drop-shadow(0 4px 8px rgba(0,0,0,.2))}
+.home-brand-main{font-size:18px;font-weight:800}.home-divider{width:1px;height:22px;background:rgba(255,255,255,.22);margin:0 8px}.home-brand-sub{font-size:13px;font-weight:500;color:#e5ebf4}
+.home-top-actions{display:flex;align-items:center;gap:0;font-size:13px}.home-top-actions button{height:34px;border:0;border-left:1px solid rgba(255,255,255,.08);background:transparent;color:#f7f9fc;padding:0 18px;display:flex;align-items:center;gap:8px}.home-top-actions button:first-child{border-left:0}.home-top-actions button:hover{background:rgba(255,255,255,.06)}
+.home-main{padding:28px 34px 24px}.home-welcome h1{margin:0;font-size:28px;line-height:1.15;color:#10213b;letter-spacing:-.55px}.home-welcome h1 span{color:#1f63e9}.home-welcome p{margin:7px 0 26px;color:#445a78;font-size:13px}
+.home-grid{display:grid;grid-template-columns:minmax(0,3fr) minmax(320px,1fr);gap:26px;align-items:start}
+.home-left,.home-right{display:grid;gap:28px}
+.home-card{background:#fff;border:1px solid #dce5f1;border-radius:14px;box-shadow:0 9px 26px rgba(15,39,78,.05)}
+.new-project-card{padding:23px 25px 20px}.home-card-title{display:flex;align-items:flex-start;gap:15px}.title-icon{width:44px;height:44px;border-radius:9px;display:grid;place-items:center;color:#1964f2;background:#fff;border:0;font-size:27px}.home-card-title h2{margin:0 0 6px;font-size:18px;color:#16243d}.home-card-title p{margin:0;color:#4f6683;font-size:12.5px}
+.home-form{display:grid;grid-template-columns:1.15fr .88fr .9fr;gap:28px;margin-top:26px}.home-field label{display:block;font-size:12px;font-weight:800;color:#17233c;margin-bottom:9px}.home-field label .req{color:#ef4444}.input-wrap{height:44px;border:1px solid #cdd8e6;border-radius:7px;display:flex;align-items:center;background:#fff;overflow:hidden}.input-wrap:focus-within{border-color:#6c9cff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}.input-ico{width:38px;text-align:center;color:#445a78;font-size:17px}.input-wrap input{border:0;outline:0;flex:1;height:100%;padding:0 10px 0 0;color:#243651;background:transparent}.input-wrap input::placeholder{color:#7387a2}.field-help{margin-top:8px;color:#667d9b;font-size:11px}
+.home-important{margin-top:22px;border:1px solid #b9d6ff;background:linear-gradient(180deg,#f7fbff,#f1f7ff);border-radius:7px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}.home-important .i{color:#1762f0;font-size:18px;font-weight:800;line-height:1}.home-important b{display:block;color:#1a4e9c;font-size:12px;margin-bottom:5px}.home-important p{margin:0;color:#536c90;font-size:11.5px}
+.home-create-row{display:flex;justify-content:flex-end;margin-top:14px}.home-create-btn{border:0;border-radius:6px;background:#1765ea;color:white;font-weight:800;padding:11px 19px;min-width:245px;box-shadow:0 4px 9px rgba(23,101,234,.17)}.home-create-btn:hover{background:#0f58d4}
+.how-card{padding:24px 22px}.how-card h2{margin:0 0 18px;font-size:18px;color:#17233c}.how-step{display:flex;gap:14px;padding:11px 0;border-bottom:1px solid #dfe7f1}.how-step:last-child{border-bottom:0}.how-ico{width:40px;height:40px;border-radius:12px;background:#f0f5ff;color:#1d67ef;display:grid;place-items:center;font-size:19px;flex:0 0 auto}.how-text b{font-size:12px;color:#15233c}.how-text p{margin:4px 0 0;font-size:11px;color:#667d9b;line-height:1.4}
+.recent-card{padding:17px 19px 18px}.recent-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.recent-head h2{margin:0;font-size:18px;color:#17233c}.view-all{border:1px solid #cdd8e7;background:#fff;color:#155fdc;border-radius:6px;padding:8px 13px;font-size:11px;font-weight:700}.view-all:hover{background:#f5f8ff}
+.home-table{width:100%;border-collapse:separate;border-spacing:0;font-size:11px;overflow:hidden;border:1px solid #e2e8f0;border-radius:8px}.home-table th{background:#f7f9fc;color:#617695;text-transform:uppercase;font-size:9px;letter-spacing:.03em;text-align:left;padding:10px 12px;border-bottom:1px solid #e1e7ef}.home-table td{padding:10px 12px;border-bottom:1px solid #edf1f6;color:#243650;vertical-align:middle}.home-table tr:last-child td{border-bottom:0}.project-cell{display:flex;align-items:center;gap:11px}.folder-ico{font-size:22px;color:#1464f3}.project-cell b{display:block;font-size:11px;color:#17233c}.project-cell small,.last-exec small{display:block;margin-top:2px;color:#697f9b;font-size:9.5px}.home-status{display:inline-flex;border-radius:4px;padding:5px 10px;font-size:9.5px;font-weight:700}.home-status.green{background:#e9f8ee;color:#16824a}.home-status.orange{background:#fff1e8;color:#d76012}.home-status.red{background:#ffeaea;color:#e02b32}.open-btn{border:1px solid #c8d8ef;background:white;color:#1560db;border-radius:6px;padding:7px 11px;font-size:10px;font-weight:700}.more-btn{border:1px solid #c8d8ef;background:#fff;color:#49627e;border-radius:6px;width:28px;height:28px;margin-left:5px}
+.tip-card{padding:24px 22px 18px;background:linear-gradient(180deg,#f8fbff 0%,#f0f6ff 100%);border-color:#c7ddff;min-height:390px}.tip-title{display:flex;align-items:center;gap:12px;color:#1759c7;font-size:18px;font-weight:800}.tip-card p{color:#274f88;font-size:12px;line-height:1.9;margin:18px 0 0}.tip-illustration{height:205px;margin-top:25px;position:relative;display:grid;place-items:center}.monitor{width:185px;height:104px;border:6px solid #7da5e8;border-radius:7px;background:linear-gradient(180deg,#edf5ff,#dbe9ff);position:relative;box-shadow:0 12px 25px rgba(41,88,162,.08)}.monitor:after{content:'';position:absolute;width:88px;height:8px;border-radius:8px;background:#95b7ee;left:50%;bottom:-20px;transform:translateX(-50%)}.shield{position:absolute;right:28px;top:34px;width:44px;height:50px;background:#3475e5;clip-path:polygon(50% 0,90% 18%,85% 72%,50% 100%,15% 72%,10% 18%)}.shield:after{content:'✓';color:white;font-weight:900;font-size:25px;position:absolute;left:12px;top:9px}.docshape{position:absolute;left:18px;top:22px;width:48px;height:58px;background:#fff;border:1px solid #c9d9ef;border-radius:4px}.docshape:before{content:'';position:absolute;left:9px;top:12px;width:28px;height:4px;background:#b8cdf0;box-shadow:0 10px 0 #b8cdf0,0 20px 0 #b8cdf0}.plant{position:absolute;right:15px;bottom:35px;width:40px;height:60px;border-bottom:5px solid #7aa6e9}.plant:before,.plant:after{content:'';position:absolute;width:24px;height:12px;background:#95b8ee;border-radius:100% 0 100% 0;transform:rotate(45deg)}.plant:before{left:4px;top:14px}.plant:after{right:0;top:30px;transform:rotate(-45deg)}
+@media(max-width:1100px){.home-grid{grid-template-columns:1fr}.home-right{grid-template-columns:1fr 1fr}.home-form{grid-template-columns:1fr}.home-top-actions button{padding:0 10px}.home-brand-sub,.home-divider{display:none}}
+@media(max-width:760px){.home-header{padding:0 14px}.home-main{padding:20px 14px}.home-right{grid-template-columns:1fr}.home-top-actions button span.txt{display:none}.home-form{gap:14px}.home-table{min-width:720px}.recent-card{overflow:auto}}
+
+</style>
+
+<style id="wm-v5-unified">
+/* ===== V5: UM ÚNICO PADRÃO VISUAL EM TODAS AS TELAS ===== */
+:root{
+  --wm-navy:#061a36;
+  --wm-navy-2:#08244a;
+  --wm-blue:#1765ea;
+  --wm-bg:#f7faff;
+  --wm-card:#ffffff;
+  --wm-text:#14233e;
+  --wm-muted:#64748b;
+  --wm-line:#dfe7f1;
+  --wm-shadow:0 8px 24px rgba(15,39,78,.05);
+}
+
+/* Estrutura geral: SEM menu lateral em nenhuma tela */
+body{background:var(--wm-bg)!important}
+.app{display:block!important;min-height:100vh!important}
+.sidebar{display:none!important}
+.main{width:100%!important;min-width:0!important}
+.topbar{display:none!important}
+.content{max-width:none!important;margin:0!important;padding:0!important}
+
+/* Cabeçalho da Home vira cabeçalho global e fica visível em todas as telas */
+.home-header{
+  display:flex!important;
+  height:58px!important;
+  background:linear-gradient(90deg,var(--wm-navy) 0%,var(--wm-navy-2) 68%,#06182f 100%)!important;
+  color:#fff!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  padding:0 28px 0 34px!important;
+  border-bottom:1px solid rgba(255,255,255,.08)!important;
+  position:sticky!important;
+  top:0!important;
+  z-index:100!important;
+}
+body:not(.home-mode) .home-header{display:flex!important}
+
+/* O header global fora da Home é clonado pelo JS */
+#globalHeaderMount{display:none}
+body:not(.home-mode) #globalHeaderMount{
+  display:block!important;
+  position:sticky;top:0;z-index:100;
+}
+body:not(.home-mode) #globalHeaderMount .home-header{position:relative!important}
+
+/* Área de conteúdo sempre com o mesmo alinhamento */
+.home-main,
+body:not(.home-mode) .content{
+  padding:28px 34px 30px!important;
+  max-width:1480px!important;
+  margin:0 auto!important;
+}
+
+/* Home */
+.home-shell{min-height:100vh!important;background:linear-gradient(180deg,#fbfdff 0%,#f7fbff 100%)!important}
+body.home-mode .content{padding:0!important;max-width:none!important}
+body.home-mode .home-main{padding:28px 34px 30px!important;max-width:1480px!important;margin:0 auto!important}
+
+/* Títulos e textos: padrão único */
+body,button,input,select{font-family:Inter,Segoe UI,Arial,sans-serif!important}
+.hero h1,.project-head h1,.exec-body h2,.home-welcome h1{color:var(--wm-text)!important}
+.hero p,.project-head p,.exec-body>p{color:var(--wm-muted)!important}
+
+/* Breadcrumb padrão para páginas internas */
+body:not(.home-mode) .view.active:before{
+  display:block;
+  color:#6c809a;
+  font-size:11px;
+  margin-bottom:14px;
+}
+#view-projects.view.active:before{content:"Início  ›  Projetos"}
+#view-project.view.active:before{content:"Início  ›  Projetos  ›  Projeto"}
+#view-execution.view.active:before{content:"Início  ›  Projetos  ›  Execução"}
+#view-help.view.active:before{content:"Início  ›  Sobre"}
+
+/* Cards, tabelas e blocos com o MESMO raio/borda */
+.card,.panel-card,.exec-menu,.exec-body,.table-wrap,.kpi,.execution-card,
+.meta-chip,.rail-item,.upload-zone{
+  border-color:var(--wm-line)!important;
+}
+.card,.panel-card,.exec-body,.table-wrap,.kpi,.execution-card{
+  border-radius:12px!important;
+  box-shadow:var(--wm-shadow)!important;
+}
+
+/* Botões: um único padrão */
+.btn,.home-create-btn,.view-all,.open-btn,.more-btn{
+  min-height:32px!important;
+  border-radius:7px!important;
+  font-size:11px!important;
+  font-weight:700!important;
+  box-shadow:none!important;
+}
+.btn-primary{
+  background:var(--wm-blue)!important;
+  color:#fff!important;
+  border:1px solid var(--wm-blue)!important;
+}
+.btn-soft,.btn-ghost,.view-all,.open-btn,.home-create-btn{
+  background:#fff!important;
+  color:#155fdc!important;
+  border:1px solid #cdd8e7!important;
+}
+.btn-soft:hover,.btn-ghost:hover,.view-all:hover,.open-btn:hover,.home-create-btn:hover{
+  background:#f5f8ff!important;
+}
+
+/* Botão da criação na Home mantém posição, mas padrão secundário aprovado */
+.home-create-btn{
+  padding:8px 13px!important;
+  min-width:0!important;
+}
+
+/* Página Projeto */
+.project-head{
+  margin-bottom:14px!important;
+}
+.project-meta{
+  margin-top:7px!important;
+}
+.kpis{
+  gap:12px!important;
+  margin:16px 0!important;
+}
+.tabs{
+  margin-top:4px!important;
+}
+
+/* Execução: sem menu lateral de navegação duplicado.
+   O menu de etapas vira faixa horizontal compacta acima do conteúdo */
+.exec-layout{
+  display:block!important;
+}
+.exec-menu{
+  display:flex!important;
+  gap:6px!important;
+  padding:6px!important;
+  margin-bottom:12px!important;
+  overflow:auto!important;
+  white-space:nowrap!important;
+  background:#fff!important;
+}
+.exec-menu button{
+  width:auto!important;
+  flex:0 0 auto!important;
+  padding:8px 10px!important;
+  border:1px solid transparent!important;
+  border-radius:7px!important;
+  font-size:10.5px!important;
+  background:transparent!important;
+  color:#526985!important;
+}
+.exec-menu button.active,.exec-menu button:hover{
+  background:#edf4ff!important;
+  color:#1765ea!important;
+}
+
+/* trilha das 7 etapas, mesmo padrão visual */
+.progress-rail{
+  gap:7px!important;
+  margin:14px 0!important;
+}
+.rail-item{
+  padding:9px 8px!important;
+  border-radius:9px!important;
+  box-shadow:none!important;
+}
+
+/* Upload: retirar aparência de botão nativo */
+.upload-zone input[type=file]{
+  font-size:11px!important;
+}
+
+/* Responsivo */
+@media(max-width:900px){
+  .home-main,body:not(.home-mode) .content{
+    padding:20px 16px 26px!important;
+  }
+  .home-header{padding:0 14px!important}
+  .home-brand-sub,.home-divider{display:none!important}
+}
+</style>
+
+
+<style id="wm-v6-file-controls">
+.file-upload-control{margin-top:12px;display:flex;justify-content:center}
+.file-upload-control input[type="file"]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.file-upload-btn{
+  min-height:32px;border-radius:7px;padding:8px 13px;
+  background:#fff;color:#155fdc;border:1px solid #cdd8e7;
+  font:700 11px Inter,Segoe UI,Arial,sans-serif;
+  display:inline-flex;align-items:center;gap:7px;cursor:pointer;
+}
+.file-upload-btn:hover{background:#f5f8ff}
+.file-type-select{
+  width:100%;max-width:190px;height:32px;
+  border:1px solid #cdd8e7;border-radius:7px;
+  background:#fff;color:#243650;padding:0 28px 0 9px;
+  font:600 11px Inter,Segoe UI,Arial,sans-serif;
+}
+.file-type-select:focus{border-color:#84adff;box-shadow:0 0 0 2px rgba(37,99,235,.08)}
+</style>
+
+
+<style id="wm-v7-navigation-home">
+/* Nome do projeto mais compacto nas páginas internas */
+#view-project .project-head h1,
+#view-project .page-head h1,
+#view-project h1#projectTitle{
+  font-size:24px!important;
+  line-height:1.2!important;
+}
+
+/* Início clicável no breadcrumb */
+.wm-home-link{
+  color:#60728f!important;
+  text-decoration:none!important;
+  cursor:pointer!important;
+  font-weight:500!important;
+}
+.wm-home-link:hover{
+  color:#1765ea!important;
+  text-decoration:underline!important;
+}
+</style>
+
+
+<style id="wm-v8-home-button">
+.wm-home-button{
+  min-height:32px;
+  border-radius:7px;
+  padding:8px 13px;
+  background:#fff;
+  color:#155fdc;
+  border:1px solid #cdd8e7;
+  font:700 11px Inter,Segoe UI,Arial,sans-serif;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  cursor:pointer;
+  box-shadow:none;
+}
+.wm-home-button:hover{background:#f5f8ff}
+.wm-page-top-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:12px;
+}
+</style>
+
+
+<style id="wm-v9-placeholder-size">
+/* Exemplos dentro dos campos: menores, sem alterar labels ou demais textos */
+.home-form input{
+  font-size:12px!important;
+}
+.home-form input::placeholder{
+  font-size:12px!important;
+}
+</style>
+
+</head>
+<body>
+<div id="globalHeaderMount"></div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="brandmark">WM</div><span><strong>WM Control</strong><small>Validation Hub</small></span></div>
+    <nav class="nav">
+      <button class="active" data-nav="home"><span class="icon">⌂</span><span class="label">Início</span></button>
+      <button data-nav="projects"><span class="icon">▦</span><span class="label">Projetos</span></button>
+      <button data-nav="help"><span class="icon">?</span><span class="label">Sobre a prévia</span></button>
+    </nav>
+    <div class="sidebox"><b>Prévia V2</b><br>Sem nuvem por enquanto. Amanhã conectamos publicação, banco e arquivos compartilhados.</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="crumb" id="crumb">WM Control / <b>Início</b></div>
+      <div class="top-actions"><span class="pill">● Prévia local</span><span class="avatar">U</span></div>
+    </header>
+
+    <div class="content">
+      <section id="view-home" class="view active">
+        <div class="home-shell">
+          <header class="home-header">
+            <div class="home-brand"><div class="home-logo">WM</div><div class="home-brand-main">WM CONTROL</div><div class="home-divider"></div><div class="home-brand-sub">Validation Hub</div></div>
+            <div class="home-top-actions">
+              <button onclick="showView('help')">◉ <span class="txt">Ajuda</span></button>
+              <button>♙ <span class="txt">Administrador</span>⌄</button>
+              <button>⇥ <span class="txt">Sair</span></button>
+            </div>
+          </header>
+          <div class="home-main">
+            <div class="home-welcome"><h1>Bem-vindo ao <span>WM Control</span></h1><p>Gerencie seus projetos e valide suas cargas WM com segurança e agilidade.</p></div>
+            <div class="home-grid">
+              <div class="home-left">
+                <div class="home-card new-project-card">
+                  <div class="home-card-title"><div class="title-icon">▱</div><div><h2>Novo Projeto</h2><p>Informe os dados básicos do projeto. Estas informações serão utilizadas em todas as validações.</p></div></div>
+                  <div class="home-form">
+                    <div class="home-field"><label>Nome do Projeto <span class="req">*</span></label><div class="input-wrap"><span class="input-ico">□</span><input id="projectName" placeholder="Ex.: Implantação LIMAP ES"></div><div class="field-help">Nome que identifica o projeto.</div></div>
+                    <div class="home-field"><label>Centro (WERKS) <span class="req">*</span></label><div class="input-wrap"><span class="input-ico">▧</span><input id="projectCenter" placeholder="Ex.: ES01"></div><div class="field-help">Código do centro responsável.</div></div>
+                    <div class="home-field"><label>Sistema de Depósito (LGNUM) <span class="req">*</span></label><div class="input-wrap"><span class="input-ico">▤</span><input id="projectWarehouse" placeholder="Ex.: 302"></div><div class="field-help">Sistema de depósito (LGNUM).</div></div>
+                  </div>
+                  <div class="home-important"><div class="i">ⓘ</div><div><b>Importante</b><p>Esses dados serão aplicados automaticamente nas validações que utilizam Centro e Sistema de Depósito.</p></div></div>
+                  <div class="home-create-row"><button class="home-create-btn" id="createProjectBtn">＋ &nbsp; Criar Projeto</button></div>
+                </div>
+
+                <div class="home-card recent-card">
+                  <div class="recent-head"><h2>Projetos recentes</h2><button class="view-all" onclick="showView('projects');renderProjects()">☷ &nbsp; Ver todos os projetos</button></div>
+                  <div style="overflow:auto"><table class="home-table"><thead><tr><th>Projeto</th><th>Centro (WERKS)</th><th>LGNUM</th><th>Última execução</th><th>Status</th><th>Ações</th></tr></thead><tbody id="recentProjects"></tbody></table></div>
+                  <span id="recentCount" style="display:none">0 projeto(s)</span>
+                </div>
+              </div>
+
+              <div class="home-right">
+                <div class="home-card how-card">
+                  <h2>Como funciona</h2>
+                  <div class="how-step"><div class="how-ico">▱</div><div class="how-text"><b>1. Crie um Projeto</b><p>Informe o nome, o centro e o sistema de depósito.</p></div></div>
+                  <div class="how-step"><div class="how-ico">⇧</div><div class="how-text"><b>2. Importe os Arquivos</b><p>Selecione os arquivos SAP necessários para a execução.</p></div></div>
+                  <div class="how-step"><div class="how-ico">✓</div><div class="how-text"><b>3. Execute as Validações</b><p>Siga as 7 etapas do processo de validação.</p></div></div>
+                  <div class="how-step"><div class="how-ico">▥</div><div class="how-text"><b>4. Gere o Resultado</b><p>Consulte e exporte os resultados das validações.</p></div></div>
+                </div>
+
+                <div class="home-card tip-card">
+                  <div class="tip-title">♧ <span>Dica</span></div>
+                  <p>Mantenha os dados do projeto sempre corretos. Eles impactam diretamente nos resultados das validações.</p>
+                  <div class="tip-illustration"><div class="monitor"><div class="docshape"></div><div class="shield"></div></div><div class="plant"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-projects" class="view">
+        <div class="hero"><div><h1>Projetos</h1><p>Todos os projetos cadastrados nesta prévia local.</p></div><button class="btn btn-primary" onclick="goHomeAndFocus()">+ Novo Projeto</button></div>
+        <div class="table-wrap"><table class="table"><thead><tr><th>Projeto</th><th>Centro</th><th>LGNUM</th><th>Criado em</th><th>Execuções</th><th></th></tr></thead><tbody id="allProjects"></tbody></table></div>
+      </section>
+
+      <section id="view-project" class="view">
+        <div class="project-head">
+          <div><h1 id="projectTitle" style="margin:0"></h1><div class="project-meta"><span class="meta-chip">Centro: <b id="projectMetaCenter"></b></span><span class="meta-chip">LGNUM: <b id="projectMetaWarehouse"></b></span><span class="meta-chip">Projeto compartilhado: <b>Sim (simulado)</b></span></div></div>
+          <button class="btn btn-primary" id="newExecutionBtn">+ Nova Execução</button>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="kpi-icon">▦</div><div><strong id="kpiExecutions">0</strong><span>Execuções</span></div></div>
+          <div class="kpi"><div class="kpi-icon">⇧</div><div><strong id="kpiFiles">0</strong><span>Arquivos registrados</span></div></div>
+          <div class="kpi"><div class="kpi-icon">✓</div><div><strong id="kpiDone">0</strong><span>Etapas concluídas</span></div></div>
+          <div class="kpi"><div class="kpi-icon">♙</div><div><strong>1</strong><span>Membro nesta prévia</span></div></div>
+        </div>
+        <div class="tabs">
+          <button class="tab active" data-project-tab="overview">Visão Geral</button>
+          <button class="tab" data-project-tab="executions">Execuções</button>
+          <button class="tab" data-project-tab="members">Membros</button>
+        </div>
+        <div id="panel-overview" class="panel active">
+          <div class="panel-card"><h3 style="margin-top:0">Últimas execuções</h3><div id="overviewExecutions"></div></div>
+        </div>
+        <div id="panel-executions" class="panel"><div class="panel-card"><div id="executionList"></div></div></div>
+        <div id="panel-members" class="panel"><div class="panel-card"><h3 style="margin-top:0">Membros do projeto</h3><table class="table"><thead><tr><th>Usuário</th><th>Perfil</th><th>Acesso</th></tr></thead><tbody><tr><td>Você</td><td>Administrador</td><td><span class="status green">Acesso total</span></td></tr><tr><td colspan="3"><span style="color:#667085;font-size:12px">Na versão online, você poderá convidar um amigo e ambos trabalharão na mesma execução e nos mesmos arquivos.</span></td></tr></tbody></table></div></div>
+      </section>
+
+      <section id="view-execution" class="view">
+        <div class="project-head">
+          <div><h1 id="executionTitle" style="margin:0"></h1><div class="project-meta"><span class="meta-chip">Projeto: <b id="execProject"></b></span><span class="meta-chip">Centro: <b id="execCenter"></b></span><span class="meta-chip">LGNUM: <b id="execWarehouse"></b></span></div></div>
+          <button class="btn btn-ghost" onclick="openCurrentProject()">← Voltar ao projeto</button>
+        </div>
+        <div class="progress-rail" id="progressRail"></div>
+        <div class="exec-layout">
+          <div class="exec-menu" id="execMenu"></div>
+          <div class="exec-body" id="execBody"></div>
+        </div>
+      </section>
+
+      <section id="view-help" class="view">
+        <div class="hero"><div><h1>Sobre esta prévia</h1><p>Este arquivo é apenas para você sentir a arquitetura da V2 antes de conectarmos a Cloudflare.</p></div></div>
+        <div class="card"><div class="card-body"><p><b>Hoje:</b> projetos e execuções ficam no armazenamento local do navegador; arquivos são apenas listados nesta sessão.</p><p><b>Amanhã:</b> podemos trocar o armazenamento local por Cloudflare D1 e os arquivos por R2, mantendo a mesma interface.</p><p><b>Objetivo:</b> permitir que duas ou mais pessoas trabalhem no mesmo projeto e na mesma carga, cada uma contribuindo com arquivos e etapas diferentes.</p></div></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="executionModal">
+  <div class="modal">
+    <h2>Nova Execução</h2><p>Crie uma carga dentro do projeto atual.</p>
+    <div class="field"><label>Nome da execução</label><input id="executionName" placeholder="Ex.: Carga 01 - 28/08/2026"></div>
+    <div class="actions"><button class="btn btn-ghost" onclick="closeExecutionModal()">Cancelar</button><button class="btn btn-primary" id="confirmExecutionBtn">Criar execução</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const STEPS=[
+  'Arquivos da Execução','1. Validar Balanceamento','2. Validar Saldo','3. Gerar Balanceamento','4. Validar Pós-Carga','5. Carga de Saldo','6. Recuperação Geral','7. Validar Tabela 20'
+];
+let db=JSON.parse(localStorage.getItem('wmv2_preview_exact')||'null') || {projects:[
+{id:'demo1',name:'Implantação LIMAP ES',center:'ES01',warehouse:'302',created:Date.now()-3600000*24,executions:[{id:'e1',name:'Execução 002',created:Date.now()-3600000*24,files:[],done:[1,2,3,4,5,6,7]}]},
+{id:'demo2',name:'Projeto Cajamar HB',center:'CJ01',warehouse:'302',created:Date.now()-3600000*48,executions:[{id:'e2',name:'Execução 001',created:Date.now()-3600000*48,files:[],done:[1,2,3,4,5,6,7]}]},
+{id:'demo3',name:'Projeto MT - PP',center:'MT01',warehouse:'110',created:Date.now()-3600000*72,executions:[{id:'e3',name:'Execução 003',created:Date.now()-3600000*72,files:[],done:[1,2,3]}]},
+{id:'demo4',name:'Projeto RJ07 - S09',center:'RJ07',warehouse:'302',created:Date.now()-3600000*96,executions:[{id:'e4',name:'Execução 001',created:Date.now()-3600000*96,files:[],done:[1,2,3,4,5,6,7]}]},
+{id:'demo5',name:'Projeto Testes WM',center:'TS01',warehouse:'302',created:Date.now()-3600000*120,executions:[{id:'e5',name:'Execução 004',created:Date.now()-3600000*120,files:[],done:[1,2]}]}
+]};
+let currentProjectId=null,currentExecutionId=null,currentSection=0;
+function save(){localStorage.setItem('wmv2_preview_exact',JSON.stringify(db));renderHome();renderProjects();}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function fmtDate(ts){return new Date(ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function showView(name){document.body.classList.toggle('home-mode',name==='home');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+name).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===name));const c=document.getElementById('crumb');if(c)c.innerHTML='WM Control / <b>'+({home:'Início',projects:'Projetos',project:'Projeto',execution:'Execução',help:'Sobre a prévia'}[name]||name)+'</b>';window.scrollTo(0,0);}
+document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>{const n=b.dataset.nav;if(n==='home'){showView('home');renderHome()}else if(n==='projects'){showView('projects');renderProjects()}else showView('help')}));
+function renderHome(){const rows=db.projects.slice().sort((a,b)=>b.created-a.created).slice(0,6);document.getElementById('recentCount').textContent=rows.length+' projeto(s)';document.getElementById('recentProjects').innerHTML=rows.length?rows.map(projectRow).join(''):'<tr><td colspan="6" class="empty">Nenhum projeto criado ainda. Crie o primeiro acima.</td></tr>'}
+function renderProjects(){document.getElementById('allProjects').innerHTML=db.projects.length?db.projects.slice().sort((a,b)=>b.created-a.created).map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.center)}</td><td>${esc(p.warehouse)}</td><td>${fmtDate(p.created)}</td><td>${p.executions?.length||0}</td><td><button class="btn btn-soft" onclick="openProject('${p.id}')">Abrir</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Nenhum projeto cadastrado.</td></tr>'}
+function projectRow(p){const e=(p.executions||[]).slice().sort((a,b)=>b.created-a.created)[0];const done=e?.done?.length||0;let st='Concluída',cl='green';if(done>0&&done<7){st='Em andamento';cl='orange'}if(!e){st='Com pendências';cl='red'}if(p.id==='demo5'){st='Com pendências';cl='red'}const subtitles={demo1:'Projeto ES',demo2:'Centro de Distribuição Cajamar',demo3:'Implantação MT',demo4:'CD RJ07 - Venda HB',demo5:'Ambiente de testes'};const folderColors={demo1:'#1765f1',demo2:'#7c3aed',demo3:'#f97316',demo4:'#14b8a6',demo5:'#f43f5e'};const fc=folderColors[p.id]||'#1765f1';return `<tr><td><div class="project-cell"><span class="folder-ico" style="color:${fc}">▱</span><div><b>${esc(p.name)}</b><small>${esc(subtitles[p.id]||'Projeto WM')}</small></div></div></td><td>${esc(p.center)}</td><td>${esc(p.warehouse)}</td><td class="last-exec">${e?fmtDate(e.created):'-'}${e?`<small>${esc(e.name)}</small>`:''}</td><td><span class="home-status ${cl}">${st}</span></td><td><button class="open-btn" onclick="openProject('${p.id}')">▱ Abrir</button><button class="more-btn">⋮</button></td></tr>`}
+function esc(s){return String(s??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]))}
+document.getElementById('createProjectBtn').addEventListener('click',()=>{const name=projectName.value.trim(),center=projectCenter.value.trim(),warehouse=projectWarehouse.value.trim();if(!name||!center||!warehouse){toast('Preencha Nome, Centro e LGNUM.');return}const p={id:uid(),name,center,warehouse,created:Date.now(),executions:[]};db.projects.push(p);save();projectName.value=projectCenter.value=projectWarehouse.value='';openProject(p.id);toast('Projeto criado.');});
+function getProject(){return db.projects.find(p=>p.id===currentProjectId)}
+function getExecution(){return getProject()?.executions?.find(e=>e.id===currentExecutionId)}
+function openProject(id){currentProjectId=id;const p=getProject();if(!p)return;document.getElementById('projectTitle').textContent=p.name;document.getElementById('projectMetaCenter').textContent=p.center;document.getElementById('projectMetaWarehouse').textContent=p.warehouse;renderProject();showView('project')}
+function openCurrentProject(){if(currentProjectId)openProject(currentProjectId)}
+function renderProject(){const p=getProject();if(!p)return;const ex=p.executions||[];document.getElementById('kpiExecutions').textContent=ex.length;document.getElementById('kpiFiles').textContent=ex.reduce((n,e)=>n+(e.files?.length||0),0);document.getElementById('kpiDone').textContent=ex.reduce((n,e)=>n+(e.done?.length||0),0);const html=ex.length?ex.slice().sort((a,b)=>b.created-a.created).map(e=>`<div class="execution-card"><div><h3>${esc(e.name)}</h3><p>${fmtDate(e.created)} · ${e.files?.length||0} arquivo(s) · ${e.done?.length||0}/7 etapas concluídas</p></div><div><span class="status ${e.done?.length===7?'green':'amber'}">${e.done?.length===7?'Concluída':'Em andamento'}</span> <button class="btn btn-soft" onclick="openExecution('${e.id}')">Abrir</button></div></div>`).join(''):'<div class="empty">Nenhuma execução criada. Clique em “Nova Execução”.</div>';document.getElementById('overviewExecutions').innerHTML=html;document.getElementById('executionList').innerHTML=html}
+document.querySelectorAll('[data-project-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.getElementById('panel-'+b.dataset.projectTab).classList.add('active')}));
+document.getElementById('newExecutionBtn').onclick=()=>{document.getElementById('executionModal').classList.add('open');setTimeout(()=>executionName.focus(),50)};
+function closeExecutionModal(){document.getElementById('executionModal').classList.remove('open');executionName.value=''}
+document.getElementById('confirmExecutionBtn').onclick=()=>{const p=getProject(),name=executionName.value.trim();if(!name){toast('Informe o nome da execução.');return}const e={id:uid(),name,created:Date.now(),files:[],done:[]};p.executions.push(e);save();closeExecutionModal();openExecution(e.id);toast('Execução criada.');}
+function openExecution(id){currentExecutionId=id;currentSection=0;const p=getProject(),e=getExecution();if(!p||!e)return;executionTitle.textContent=e.name;execProject.textContent=p.name;execCenter.textContent=p.center;execWarehouse.textContent=p.warehouse;renderExecution();showView('execution')}
+function renderExecution(){const e=getExecution();if(!e)return;progressRail.innerHTML=Array.from({length:7},(_,i)=>`<div class="rail-item ${e.done.includes(i+1)?'done':''} ${currentSection===i+1?'current':''}"><div class="n">${e.done.includes(i+1)?'✓':i+1}</div><b>${STEPS[i+1].replace(/^\d+\.\s*/,'')}</b></div>`).join('');execMenu.innerHTML=STEPS.map((s,i)=>`<button class="${currentSection===i?'active':''}" onclick="selectExecSection(${i})">${i===0?'⇧ ':'○ '}${s}</button>`).join('');renderExecBody()}
+function selectExecSection(i){currentSection=i;renderExecution()}
+function renderExecBody(){const p=getProject(),e=getExecution();if(currentSection===0){execBody.innerHTML=`<h2>Arquivos da Execução</h2><p>Na versão online, os arquivos enviados por qualquer membro ficarão disponíveis para todos que participam deste projeto.</p><div class="upload-zone"><b>Adicionar arquivos à execução</b><br><span style="color:#667085;font-size:12px">Selecione vários XLS, XLSX, TXT ou CSV.</span><div class="file-upload-control"><input id="fileInput" type="file" multiple accept=".xlsx,.xls,.csv,.txt"><label for="fileInput" class="file-upload-btn">⇧ Selecionar arquivos</label></div></div><div class="file-list" id="fileList"></div>`;document.getElementById('fileInput').onchange=e2=>{[...e2.target.files].forEach(f=>e.files.push({id:uid(),name:f.name,size:f.size,type:guessType(f.name),by:'Você',at:Date.now()}));save();renderExecBody();renderProject();toast('Arquivo(s) adicionado(s) à prévia.');};renderFileList();return}
+const step=currentSection;const title=STEPS[step];execBody.innerHTML=`<h2>${title}</h2><p>Prévia da etapa dentro da nova arquitetura. O motor atual de validação será encaixado aqui depois.</p><div class="autofill"><span>Centro (WERKS): <b>${esc(p.center)}</b></span><span>Sistema de Depósito (LGNUM): <b>${esc(p.warehouse)}</b></span><span>Projeto: <b>${esc(p.name)}</b></span></div><div class="validation-placeholder"><h3>Dados automáticos do projeto</h3><div class="notice">Você não precisará informar novamente Centro ou LGNUM nesta execução. Sempre que uma regra exigir esses campos, o WM Control usará os dados cadastrados no projeto.</div><div class="actions"><button class="btn ${e.done.includes(step)?'btn-ghost':'btn-primary'}" onclick="toggleStep(${step})">${e.done.includes(step)?'Marcar como pendente':'Simular conclusão da etapa'}</button></div></div>`}
+function renderFileList(){const e=getExecution(),el=document.getElementById('fileList');if(!el)return;if(!e.files.length){el.innerHTML='<div class="empty">Nenhum arquivo adicionado nesta execução.</div>';return}el.innerHTML=`<div class="file-row header"><div>Arquivo</div><div>Tipo</div><div>Enviado por</div><div>Status</div><div></div></div>`+e.files.map(f=>{const current=f.type||guessType(f.name);return `<div class="file-row"><div><b>${esc(f.name)}</b><br><span style="color:#98a2b3">${(f.size/1024).toFixed(1)} KB</span></div><div><select class="file-type-select" onchange="setFileType('${f.id}',this.value)">${fileTypeOptions(current)}</select></div><div>${f.by}<br><span style="color:#98a2b3">${fmtDate(f.at)}</span></div><div><span class="status green">Disponível</span></div><div><button class="btn btn-danger" onclick="removeFile('${f.id}')">Excluir</button></div></div>`}).join('')}
+const FILE_TYPES=['A classificar','Balanceamento','LGPLA','LQUA Inicial','MLGT Atual','MARC','MLGN Pós-Carga','MLGT Pós-Carga','LQUA Pós-Saldo','LQUA Recuperação','Tabela 20 Antiga','Tabela 20 Atual','Range Caixa / Separador'];
+function fileTypeOptions(current){return FILE_TYPES.map(t=>`<option value="${t}" ${t===current?'selected':''}>${t}</option>`).join('')}
+function setFileType(id,type){const e=getExecution();const f=e.files.find(x=>x.id===id);if(!f)return;f.type=type;save();toast('Tipo do arquivo atualizado.')}
+function guessType(n){const s=n.toLowerCase();if(s.includes('range'))return 'Range Caixa / Separador';if(s.includes('0020')&&s.includes('ant'))return 'Tabela 20 Antiga';if(s.includes('0020')&&s.includes('atu'))return 'Tabela 20 Atual';if(s.includes('mlgn'))return 'MLGN Pós-Carga';if(s.includes('mlgt')&&s.includes('pos'))return 'MLGT Pós-Carga';if(s.includes('mlgt'))return 'MLGT Atual';if(s.includes('lqua')&&s.includes('recup'))return 'LQUA Recuperação';if(s.includes('lqua')&&s.includes('pos'))return 'LQUA Pós-Saldo';if(s.includes('lqua'))return 'LQUA Inicial';if(s.includes('lgpla'))return 'LGPLA';if(s.includes('marc'))return 'MARC';if(s.includes('balance'))return 'Balanceamento';return 'A classificar'}
+function removeFile(id){const e=getExecution();e.files=e.files.filter(f=>f.id!==id);save();renderExecBody();renderProject()}
+function toggleStep(step){const e=getExecution();e.done=e.done||[];e.done=e.done.includes(step)?e.done.filter(x=>x!==step):[...e.done,step].sort();save();renderExecution();renderProject();}
+function goHomeAndFocus(){showView('home');setTimeout(()=>projectName.focus(),50)}
+document.body.classList.add('home-mode');renderHome();renderProjects();
+</script>
+
+<script id="wm-v5-header-sync">
+document.addEventListener('DOMContentLoaded', function(){
+  const source = document.querySelector('#view-home .home-header');
+  const mount = document.getElementById('globalHeaderMount');
+  if(source && mount){
+    mount.innerHTML = source.outerHTML;
+  }
+});
+</script>
+
+
+<script id="wm-v7-navigation-home-js">
+document.addEventListener('DOMContentLoaded', function () {
+  function goHomeFromBreadcrumb() {
+    if (typeof showView === 'function') {
+      showView('home');
+    }
+  }
+
+  function applyHomeLinks() {
+    document.querySelectorAll('.view:not(#view-home) .breadcrumb').forEach(function (bc) {
+      const first = bc.querySelector('span, a');
+      if (!first) return;
+      if ((first.textContent || '').trim().toLowerCase() !== 'início') return;
+
+      if (first.tagName.toLowerCase() === 'a') {
+        first.href = '#';
+        first.classList.add('wm-home-link');
+        first.onclick = function (e) {
+          e.preventDefault();
+          goHomeFromBreadcrumb();
+        };
+      } else {
+        const link = document.createElement('a');
+        link.href = '#';
+        link.className = 'wm-home-link';
+        link.textContent = first.textContent;
+        link.onclick = function (e) {
+          e.preventDefault();
+          goHomeFromBreadcrumb();
+        };
+        first.replaceWith(link);
+      }
+    });
+  }
+
+  applyHomeLinks();
+
+  // Garante a regra também quando a página interna for renderizada novamente.
+  const observer = new MutationObserver(applyHomeLinks);
+  observer.observe(document.body, {childList:true, subtree:true});
+});
+</script>
+
+
+<script id="wm-v8-home-button-js">
+document.addEventListener('DOMContentLoaded', function () {
+  function goHome(){
+    if (typeof showView === 'function') showView('home');
+  }
+
+  function addHomeButtons(){
+    document.querySelectorAll('.view').forEach(function(view){
+      if(view.id === 'view-home') return;
+      if(view.querySelector('.wm-home-button')) return;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'wm-page-top-actions';
+
+      const btn = document.createElement('button');
+      btn.className = 'wm-home-button';
+      btn.type = 'button';
+      btn.innerHTML = '← Início';
+      btn.addEventListener('click', goHome);
+
+      wrap.appendChild(btn);
+
+      const first = view.firstElementChild;
+      if(first) view.insertBefore(wrap, first);
+      else view.appendChild(wrap);
+    });
+  }
+
+  addHomeButtons();
+
+  const observer = new MutationObserver(addHomeButtons);
+  observer.observe(document.body, {childList:true, subtree:true});
+});
+</script>
+
+</body>
+</html>
