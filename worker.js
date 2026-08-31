@@ -59,13 +59,13 @@ async function handleApi(request, env, url) {
     const validation = validateProjectInput(body);
     if (validation.error) return json({ error: validation.error }, 400);
 
-    const id = crypto.randomUUID();
     const createdAt = new Date().toISOString();
     const { name, werks, lgnum } = validation.project;
 
-    await env.DB.prepare(
-      "INSERT INTO projects (id, name, werks, lgnum, created_at) VALUES (?, ?, ?, ?, ?)"
-    ).bind(id, name, werks, lgnum, createdAt).run();
+    const result = await env.DB.prepare(
+      "INSERT INTO projects (name, werks, lgnum, created_at) VALUES (?, ?, ?, ?)"
+    ).bind(name, werks, lgnum, createdAt).run();
+    const id = result.meta.last_row_id;
 
     return json({ project: { id, name, werks, lgnum, created_at: createdAt } }, 201);
   }
