@@ -117,12 +117,9 @@ async function handleApi(request, env, url) {
       const validation = validateExecutionInput(body);
       if (validation.error) return json({ error: validation.error }, 400);
 
-      const result = await env.DB.prepare(
-        "INSERT INTO executions (project_id, name) VALUES (?, ?)"
-      ).bind(projectId, validation.execution.name).run();
       const row = await env.DB.prepare(
-        "SELECT id, project_id, name, status, created_at FROM executions WHERE id = ? LIMIT 1"
-      ).bind(result.meta.last_row_id).first();
+        "INSERT INTO executions (project_id, name) VALUES (?, ?) RETURNING id, project_id, name, status, created_at"
+      ).bind(projectId, validation.execution.name).first();
 
       return json({ execution: executionFromRow(row) }, 201);
     }
